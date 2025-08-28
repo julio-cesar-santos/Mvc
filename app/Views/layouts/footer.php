@@ -31,6 +31,7 @@
     <script>
         // Define a URL base para o JavaScript usar
         const API_BASE_URL = '<?php echo BASE_URL; ?>/api';
+        const BASE_URL = '<?php echo BASE_URL; ?>'; // Adicionado para correção do bug
     </script>
     <script src="<?php echo BASE_URL; ?>/js/main.js"></script>
 </body>

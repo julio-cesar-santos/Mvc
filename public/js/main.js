@@ -80,6 +80,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.success) {
                 localStorage.removeItem('carrinho');
                 showNotification(data.message);
+                // ALTERAÇÃO: Redireciona para a home após o logout
                 setTimeout(() => window.location.href = `${BASE_URL}/home`, 1500);
             }
         });
@@ -112,6 +113,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
             if (response.ok && data.success) {
                 showNotification(data.message);
+                // ALTERAÇÃO: Redireciona para a home após o login
                 setTimeout(() => window.location.href = `${BASE_URL}/home`, 1500);
             } else {
                 showNotification(data.message || 'Erro.', 'error');
@@ -135,6 +137,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
             if (response.ok && data.success) {
                 showNotification(data.message);
+                // ALTERAÇÃO: Redireciona para a página de login após o cadastro
                 setTimeout(() => window.location.href = `${BASE_URL}/auth/login`, 1500);
             } else {
                 showNotification(data.message || 'Erro.', 'error');
@@ -171,6 +174,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (produtosContainer) {
         async function fetchProducts() {
             try {
+                // A requisição agora funciona para todos os usuários, não apenas admin
                 const response = await fetch(`${API_BASE_URL}/produtos`);
                 if (!response.ok) throw new Error('Falha ao carregar produtos.');
                 
@@ -299,6 +303,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 localStorage.removeItem('carrinho');
                 carrinho = [];
                 renderCart();
+                // ALTERAÇÃO: Redireciona para a página da conta após finalizar o pedido
                 setTimeout(() => window.location.href = `${BASE_URL}/conta`, 1500);
             } else {
                 showNotification(data.message, 'error');
@@ -326,15 +331,18 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             orders.forEach(order => {
                 let itensHtml = '';
-                order.itens.forEach(item => {
-                    itensHtml += `<div class="pedido-item-produto">
-                        <img src="${API_BASE_URL}/produtoImagem/${item.produto_id}" alt="${item.produto_nome}" class="produto-imagem-pedido">
-                        <div class="produto-detalhes">
-                            <strong>${item.produto_nome}</strong>
-                            <span>Quantidade: ${item.quantidade}</span>
-                        </div>
-                    </div>`;
-                });
+                // Verifica se 'itens' existe e é um array
+                if (order.itens && Array.isArray(order.itens)) {
+                    order.itens.forEach(item => {
+                        itensHtml += `<div class="pedido-item-produto">
+                            <img src="${API_BASE_URL}/produtoImagem/${item.produto_id}" alt="${item.produto_nome}" class="produto-imagem-pedido">
+                            <div class="produto-detalhes">
+                                <strong>${item.produto_nome}</strong>
+                                <span>Quantidade: ${item.quantidade}</span>
+                            </div>
+                        </div>`;
+                    });
+                }
                 const orderDiv = document.createElement('div');
                 orderDiv.classList.add('pedido-item');
                 orderDiv.innerHTML = `

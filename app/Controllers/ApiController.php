@@ -101,17 +101,17 @@ class ApiController {
      * Substitui: produtos_api.php
      */
     public function produtos() {
-        $this->checkAdmin();
         $method = $_SERVER['REQUEST_METHOD'];
         $produtoModel = new Produto();
 
         switch ($method) {
             case 'GET':
+                // Listagem de produtos é pública
                 $this->jsonResponse($produtoModel->getAll());
                 break;
             
             case 'POST':
-                // Tratamento especial para formulários com imagem (multipart/form-data)
+                $this->checkAdmin(); // Apenas admin pode criar/atualizar
                 if (isset($_POST['_method']) && strtoupper($_POST['_method']) === 'PUT') {
                     $this->updateProduto();
                 } else {
@@ -120,6 +120,7 @@ class ApiController {
                 break;
 
             case 'DELETE':
+                $this->checkAdmin(); // Apenas admin pode excluir
                 $data = json_decode(file_get_contents('php://input'), true);
                 $id = $data['id'] ?? 0;
                 if (!$id) $this->jsonResponse(['message' => 'ID do produto é obrigatório.'], 400);

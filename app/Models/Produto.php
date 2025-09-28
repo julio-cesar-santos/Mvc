@@ -7,7 +7,7 @@ class Produto {
     }
 
     public function getAll() {
-        $stmt = $this->db->query("SELECT id, nome, preco, estoque FROM produtos");
+        $stmt = $this->db->query("SELECT id, nome, preco, estoque, imagem FROM produtos");
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -17,23 +17,23 @@ class Produto {
         return $stmt->fetchColumn();
     }
 
-    public function create($nome, $preco, $estoque, $imagem = null) {
+    public function create($nome, $preco, $estoque, $imagem_path = null) {
         $stmt = $this->db->prepare("INSERT INTO produtos (nome, preco, estoque, imagem) VALUES (?, ?, ?, ?)");
         $stmt->bindParam(1, $nome);
         $stmt->bindParam(2, $preco);
         $stmt->bindParam(3, $estoque);
-        $stmt->bindParam(4, $imagem, PDO::PARAM_LOB);
+        $stmt->bindParam(4, $imagem_path);
         $stmt->execute();
         return $this->db->lastInsertId();
     }
 
-    public function update($id, $nome, $preco, $estoque, $imagem = null) {
-        if ($imagem) {
+    public function update($id, $nome, $preco, $estoque, $imagem_path = null) {
+        if ($imagem_path == null) {
             $stmt = $this->db->prepare("UPDATE produtos SET nome = ?, preco = ?, estoque = ?, imagem = ? WHERE id = ?");
             $stmt->bindParam(1, $nome);
             $stmt->bindParam(2, $preco);
             $stmt->bindParam(3, $estoque);
-            $stmt->bindParam(4, $imagem, PDO::PARAM_LOB);
+            $stmt->bindParam(4, $imagem_path);
             $stmt->bindParam(5, $id);
         } else {
             $stmt = $this->db->prepare("UPDATE produtos SET nome = ?, preco = ?, estoque = ? WHERE id = ?");

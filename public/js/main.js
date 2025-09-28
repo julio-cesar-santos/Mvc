@@ -146,7 +146,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // --- LÓGICA DO CARRINHO (reutilizada em várias páginas) ---
-    function addToCart(productId, productName, productPrice, productStock) {
+    function addToCart(productId, productName, productPrice, productStock, productImagePath) {
         let carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
         const existingItem = carrinho.find(item => item.id == productId);
 
@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } else {
             if (productStock > 0) {
-                carrinho.push({ id: productId, nome: productName, preco: productPrice, quantidade: 1, estoque_disponivel: productStock });
+                carrinho.push({ id: productId, nome: productName, preco: productPrice, quantidade: 1, estoque_disponivel: productStock, imagem_path: productImagePath});
                 showNotification(`${productName} adicionado ao carrinho.`);
             } else {
                 showNotification(`${productName} está fora de estoque.`, 'error');
@@ -185,7 +185,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     products.forEach(product => {
                         const productDiv = document.createElement('div');
                         productDiv.classList.add('produto');
-                        const imageUrl = `${API_BASE_URL}/produtoImagem/${product.id}`;
+                        const imageUrl = product.imagem ? `${BASE_URL}/${product.imagem}` : `${BASE_URL}/images/produtos/placeholder.png`;
                         productDiv.innerHTML = `
                             <img src="${imageUrl}" alt="${product.nome}">
                             <dl>
@@ -193,7 +193,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <dd>Preço: R$ ${parseFloat(product.preco).toFixed(2)}</dd>
                                 <dd>Estoque: ${product.estoque}</dd>
                                 <dd>
-                                    <button class="add-to-cart" data-id="${product.id}" data-nome="${product.nome}" data-preco="${product.preco}" data-estoque="${product.estoque}">
+                                    <button class="add-to-cart" data-id="${product.id}" data-nome="${product.nome}" data-preco="${product.preco}" 
+                                    data-estoque="${product.estoque}" data-imagem-path="${product.imagem}">
                                         <i class="fas fa-shopping-cart"></i> Adicionar ao carrinho
                                     </button>
                                 </dd>
@@ -241,7 +242,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const itemDiv = document.createElement('div');
                     itemDiv.classList.add('carrinho-item');
                     itemDiv.innerHTML = `
-                        <img src="${API_BASE_URL}/produtoImagem/${item.id}" alt="${item.nome}" class="item-image">
+                        <img src="${imageUrl}" alt="${item.nome}" class="item-image">
                         <div class="item-details">
                             <span class="item-name">${item.nome}</span>
                             <span class="item-price">R$ ${parseFloat(item.preco).toFixed(2)}</span>
@@ -373,9 +374,10 @@ document.addEventListener('DOMContentLoaded', function() {
             adminProdutosContainer.innerHTML = '';
             products.forEach(product => {
                 const productItem = document.createElement('div');
+                const imageUrl = product.imagem ? `${BASE_URL}/${product.imagem}` : `${BASE_URL}/images/produtos/placeholder.png`;
                 productItem.classList.add('produto-admin-item');
                 productItem.innerHTML = `
-                    <img src="${API_BASE_URL}/produtoImagem/${product.id}" alt="${product.nome}" class="produto-admin-img">
+                    <img src="${imageUrl}/produtoImagem/${product.id}" alt="${product.nome}" class="produto-admin-img">
                     <div class="produto-admin-info">
                         <strong>${product.nome}</strong>
                         <span>R$ ${parseFloat(product.preco).toFixed(2)} | Estoque: ${product.estoque}</span>

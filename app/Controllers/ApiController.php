@@ -1,6 +1,9 @@
 <?php
 class ApiController {
 
+    private const IMAGE_DIR = '../public/images/produtos/';
+    private const IMAGE_URL_BASE = 'images/produtos/';
+
     // Função auxiliar para enviar respostas JSON padronizadas
     private function jsonResponse($data, $statusCode = 200) {
         http_response_code($statusCode);
@@ -18,6 +21,45 @@ class ApiController {
     private function checkAuth() {
         if (!isAuthenticated()) {
             $this->jsonResponse(['message' => 'Não autorizado. Faça login para continuar.'], 401);
+        }
+    }
+
+    // NOVA FUNÇÃO: Lida com o upload e salvamento do arquivo
+    private function uploadFile($file) {
+        if (!isset($file) || $file['error'] !== UPLOAD_ERR_OK) {
+            return null; // Nenhuma imagem para upload ou erro de upload
+        }
+
+        $target_dir = APP_PATH . self::IMAGE_DIR; 
+        
+        // Cria o diretório se não existir (garantindo a permissão 0777 se necessário)
+        if (!is_dir($target_dir)) {
+            if (!mkdir($target_dir, 0777, true)) {
+                $this->jsonResponse(['message' => 'Erro: A pasta de imagens não pode ser criada ou não tem permissão de escrita.'], 500);
+            }
+        }
+
+        $imageFileType = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        // Gera um nome de arquivo único para evitar colisões
+        $newFileName = uniqid('prod_', true) . '.' . $imageFileType; 
+        $target_file = $target_dir . $newFileName;
+        
+        if (move_uploaded_file($file["tmp_name"], $target_file)) {
+            // Retorna o caminho relativo (public/images/produtos/...)
+            return self::IMAGE_URL_BASE . $newFileName;
+        } else {
+            $this->jsonResponse(['message' => 'Erro ao mover arquivo de imagem.'], 500);
+        }
+    }
+
+    // NOVA FUNÇÃO: Lida com a exclusão do arquivo físico
+    private function deleteFile($image_path) {
+        if (!empty($image_path)) {
+            // Constrói o caminho completo a partir da raiz da aplicação
+            $full_path = APP_PATH . self::IMAGE_DIR . basename($image_path); 
+            if (file_exists($full_path)) {
+                @unlink($full_path); // Deleta o arquivo físico
+            }
         }
     }
 
@@ -125,9 +167,13 @@ class ApiController {
                 $id = $data['id'] ?? 0;
                 if (!$id) $this->jsonResponse(['message' => 'ID do produto é obrigatório.'], 400);
 
-                if ($produtoModel->delete($id)) {
+                $image_path = $produtoModel->getImageById($id); // Pega o caminho antes de deletar do BD
+
+                try {
+                    $produtoModel->delete($id);
+                    $this->deleteFile($image_path); // Deleta o arquivo físico
                     $this->jsonResponse(['message' => 'Produto excluído com sucesso!']);
-                } else {
+                } catch (Exception $e) {
                     $this->jsonResponse(['message' => 'Erro ao excluir. O produto pode estar associado a um pedido.'], 500);
                 }
                 break;
@@ -141,14 +187,14 @@ class ApiController {
         $nome = $_POST['nome'] ?? '';
         $preco = $_POST['preco'] ?? 0;
         $estoque = $_POST['estoque'] ?? 0;
-        $imagem = isset($_FILES['imagem']) ? file_get_contents($_FILES['imagem']['tmp_name']) : null;
+        $imagem_path = $this->uploadFile($_FILES['imagem'] ?? null);
 
         if (empty($nome) || empty($preco)) {
             $this->jsonResponse(['message' => 'Nome e preço são obrigatórios.'], 400);
         }
 
         $produtoModel = new Produto();
-        $newId = $produtoModel->create($nome, $preco, $estoque, $imagem);
+        $newId = $produtoModel->create($nome, $preco, $estoque, $imagem_path);
         $this->jsonResponse(['message' => 'Produto adicionado com sucesso!', 'id' => $newId], 201);
     }
     
@@ -157,15 +203,24 @@ class ApiController {
         $nome = $_POST['nome'] ?? '';
         $preco = $_POST['preco'] ?? 0;
         $estoque = $_POST['estoque'] ?? 0;
-        $imagem = isset($_FILES['imagem']) && $_FILES['imagem']['error'] == UPLOAD_ERR_OK ? file_get_contents($_FILES['imagem']['tmp_name']) : null;
 
         if (empty($id) || empty($nome) || empty($preco)) {
             $this->jsonResponse(['message' => 'ID, nome e preço são obrigatórios.'], 400);
         }
 
         $produtoModel = new Produto();
-        $produtoModel->update($id, $nome, $preco, $estoque, $imagem);
+        $current_image_path = $produtoModel->getImageById($id); // Caminho atual
+       if (isset($_FILES['imagem']) && $_FILES['imagem']['error'] == UPLOAD_ERR_OK) {
+            $new_image_path = $this->uploadFile($_FILES['imagem']);
+            $this->deleteFile($current_image_path); // Deleta o arquivo antigo
+            $final_path = $new_image_path;
+        } else {
+            $final_path = $current_image_path; // Mantém o caminho existente
+        }
+        
+        $produtoModel->update($id, $nome, $preco, $estoque, $final_path);
         $this->jsonResponse(['message' => 'Produto atualizado com sucesso!']);
+        }
     }
 
     /**
@@ -173,12 +228,16 @@ class ApiController {
      */
     public function produtoImagem($id) {
         $produtoModel = new Produto();
-        $imagem = $produtoModel->getImageById($id);
+        $image_path = $produtoModel->getImageById($id);
 
-        header("Content-Type: image/jpeg");
-        if ($imagem) {
-            echo $imagem;
+        // O arquivo está em public/images/produtos/ no disco.
+        $full_path = APP_PATH . self::IMAGE_DIR . basename($image_path);
+
+         header("Content-Type: image/jpeg");
+        if (file_exists($full_path)) {
+             readfile($full_path);
         } else {
+            // Caminho para a imagem padrão (favicon neste caso)
             readfile(APP_PATH . '../public/ico/favicon.ico');
         }
         exit();

@@ -1,7 +1,7 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    # Altere a linha abaixo se o seu projeto não estiver na raiz do servidor
-    RewriteBase /SiteQueijaria_MVC/public/
+    # ALTERADO: A base agora é a raiz do container
+    RewriteBase / 
 
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d

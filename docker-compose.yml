@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  # 1. Serviço de Aplicação Web (PHP/Apache)
+  web:
+    build:
+      context: .                 # Usa o Dockerfile criado no diretório atual
+      dockerfile: Dockerfile
+    container_name: mvc_web
+    ports:
+      - "80:80"                  # Acessível em http://localhost (porta 80)
+    volumes:
+      - ./:/var/www/html         # Mapeia a pasta do seu projeto para o container (código em tempo real)
+    depends_on:
+      - db                       # Garante que o DB inicie primeiro
+    restart: unless-stopped
+    
+  # 2. Serviço de Banco de Dados (MySQL)
+  db:
+    image: mysql:8.0
+    container_name: mvc_db
+    environment:
+      # Use estas credenciais no seu arquivo Database.php
+      MYSQL_ROOT_PASSWORD: root_password_segura
+      MYSQL_DATABASE: queijaria  
+      MYSQL_USER: user
+      MYSQL_PASSWORD: app_password
+    volumes:
+      - db_data:/var/lib/mysql   # Persistência de dados
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql # Inicializa o BD com o schema
+    ports:
+      - "3306:3306"              # Opcional, para acesso externo
+    restart: unless-stopped
+
+# Volumes para persistir os dados do banco de dados
+volumes:
+  db_data:

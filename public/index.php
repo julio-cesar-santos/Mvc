@@ -2,7 +2,7 @@
 date_default_timezone_set('America/Recife');
 session_start();
 
-define('BASE_URL', '/SiteQueijaria_MVC/public');
+define('BASE_URL', ''); // ALTERADO: Deve ser string vazia
 define('APP_PATH', __DIR__ . '/../app/');
 
 // Autoloader para carregar Models e Controllers

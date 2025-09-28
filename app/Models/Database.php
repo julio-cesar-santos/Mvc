@@ -4,10 +4,10 @@ class Database {
     private $pdo;
 
     private function __construct() {
-        $host = 'localhost';
-        $db   = 'queijaria'; // Nome do seu banco de dados
-        $user = 'root';      // Usuário do BD
-        $pass = '';          // Senha do BD
+        $host = 'db';          // Nome do serviço no docker-compose
+        $db   = 'queijaria';
+        $user = 'user';        // Usuário definido no docker-compose
+        $pass = 'app_password';// Senha definida no docker-compose
         $charset = 'utf8mb4';
 
         $dsn = "mysql:host=$host;dbname=$db;charset=$charset";

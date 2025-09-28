@@ -28,7 +28,7 @@ class Produto {
     }
 
     public function update($id, $nome, $preco, $estoque, $imagem_path = null) {
-        if ($imagem_path == null) {
+        if ($imagem_path !== null) {
             $stmt = $this->db->prepare("UPDATE produtos SET nome = ?, preco = ?, estoque = ?, imagem = ? WHERE id = ?");
             $stmt->bindParam(1, $nome);
             $stmt->bindParam(2, $preco);

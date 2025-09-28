@@ -336,4 +336,3 @@ class ApiController {
         echo $fileContent;
         exit();
     }
-}

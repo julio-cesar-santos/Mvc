@@ -20,16 +20,17 @@ services:
     image: mysql:8.0
     container_name: mvc_db
     environment:
-      # Use estas credenciais no seu arquivo Database.php
-      MYSQL_ROOT_PASSWORD: root_password_segura
+      MYSQL_ROOT_PASSWORD: 123
       MYSQL_DATABASE: queijaria  
       MYSQL_USER: user
       MYSQL_PASSWORD: app_password
+      # ADIÇÃO CRÍTICA PARA COMPATIBILIDADE:
+      MYSQL_DEFAULT_AUTHENTICATION_PLUGIN: mysql_native_password 
     volumes:
-      - db_data:/var/lib/mysql   # Persistência de dados
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql # Inicializa o BD com o schema
+      - db_data:/var/lib/mysql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      - "3306:3306"              # Opcional, para acesso externo
+      - "3306:3306"
     restart: unless-stopped
 
 # Volumes para persistir os dados do banco de dados

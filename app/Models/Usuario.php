@@ -17,13 +17,14 @@ class Usuario {
         try {
             $stmt = $this->db->prepare("INSERT INTO usuarios (nome, email, senha) VALUES (?, ?, ?)");
             return $stmt->execute([$nome, $email, $hashed_password]);
-        } catch (PDOException $e) {
+
+        } catch (\PDOException $e) { 
             return false;
         }
     }
 
     public function login($email, $senha) {
-        $user = $this->findByEmail($email);
+        $user = this->findByEmail($email);
         if ($user && password_verify($senha, $user['senha'])) {
             return $user;
         }

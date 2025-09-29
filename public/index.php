@@ -2,7 +2,8 @@
 date_default_timezone_set('America/Recife');
 session_start();
 
-ini_set('display_errors', 0);
+ini_set('display_errors', 1); 
+error_reporting(E_ALL);
 
 define('BASE_URL', ''); // ALTERADO: Deve ser string vazia
 define('APP_PATH', __DIR__ . '/../app/');

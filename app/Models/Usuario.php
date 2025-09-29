@@ -24,7 +24,7 @@ class Usuario {
     }
 
     public function login($email, $senha) {
-        $user = this->findByEmail($email);
+        $user = $this->findByEmail($email);
         if ($user && password_verify($senha, $user['senha'])) {
             return $user;
         }

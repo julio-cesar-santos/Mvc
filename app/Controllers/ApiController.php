@@ -93,40 +93,50 @@ class ApiController {
             $this->jsonResponse(['message' => 'Por favor, preencha todos os campos.'], 400);
         }
 
-        $userModel = new Usuario();
-        if ($userModel->create($nome, $email, $senha)) {
-            $this->jsonResponse(['success' => true, 'message' => 'Cadastro realizado com sucesso!']);
-        } else {
-            $this->jsonResponse(['success' => false, 'message' => 'Erro ao cadastrar. O email pode já estar em uso.'], 409);
+        try {
+            $userModel = new Usuario();
+            if ($userModel->create($nome, $email, $senha)) {
+                $this->jsonResponse(['success' => true, 'message' => 'Cadastro realizado com sucesso!']);
+            } else {
+                // Erro de usuário duplicado (código 409) é tratado pelo Model/try-catch
+                $this->jsonResponse(['success' => false, 'message' => 'Erro ao cadastrar. O email pode já estar em uso.'], 409);
+            }
+        } catch (\PDOException $e) {
+            // Se a conexão falhar ou houver um erro inesperado no DB:
+            $this->jsonResponse(['success' => false, 'message' => 'Erro interno do servidor ao processar o cadastro.'], 500);
         }
     }
 
     /**
      * Rota: /api/login (Método: POST)
-     * Substitui: login_process.php
+     * Adicionado bloco try-catch para evitar falhas fatais no DB.
      */
     public function login() {
         $data = json_decode(file_get_contents('php://input'), true);
         $email = $data['email'] ?? '';
         $senha = $data['senha'] ?? '';
 
-        $userModel = new Usuario();
-        $user = $userModel->login($email, $senha);
+        try {
+            $userModel = new Usuario();
+            $user = $userModel->login($email, $senha);
 
-        if ($user) {
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['user_name'] = $user['nome'];
-            $_SESSION['is_admin'] = (bool)$user['is_admin'];
-            
-            $this->jsonResponse([
-                'success' => true, 'message' => 'Login realizado com sucesso!',
-                'user_id' => $user['id'], 'is_admin' => (bool)$user['is_admin'], 'user_name' => $user['nome']
-            ]);
-        } else {
-            $this->jsonResponse(['success' => false, 'message' => 'Email ou senha inválidos.'], 401);
+            if ($user) {
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['user_name'] = $user['nome'];
+                $_SESSION['is_admin'] = (bool)$user['is_admin'];
+                
+                $this->jsonResponse([
+                    'success' => true, 'message' => 'Login realizado com sucesso!',
+                    'user_id' => $user['id'], 'is_admin' => (bool)$user['is_admin'], 'user_name' => $user['nome']
+                ]);
+            } else {
+                $this->jsonResponse(['success' => false, 'message' => 'Email ou senha inválidos.'], 401);
+            }
+        } catch (\PDOException $e) {
+             // Se a conexão falhar ou houver um erro inesperado no DB:
+             $this->jsonResponse(['success' => false, 'message' => 'Erro interno do servidor ao processar o login.'], 500);
         }
     }
-
     /**
      * Rota: /api/logout (Método: POST)
      * Substitui: logout.php
